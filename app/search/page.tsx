@@ -156,9 +156,9 @@ export default function SearchPage() {
                     </div>
                   ) : posts.length > 0 ? (
                     <div className="space-y-6">
-                      {posts.map((post) => (
-                        <PostCard key={post.id} post={post} />
-                      ))}
+                      {/* {posts.map((post) => (
+                        // <PostCard key={post.id} post={post} />
+                      ))} */}
 
                       <Pagination>
                         <PaginationContent>
