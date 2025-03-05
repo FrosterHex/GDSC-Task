@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDate } from "@/lib/utils"
-import { Heart, MessageCircle, Share2, ArrowLeft } from 'lucide-react'
+import { Heart, MessageCircle, Share2, ArrowLeft } from "lucide-react"
 
 type Post = {
   id: number
@@ -17,7 +17,10 @@ type Post = {
   body: string
   userId: number
   tags: string[]
-  reactions: number
+  reactions: {
+    likes: number
+    dislikes: number
+  }
 }
 
 type User = {
@@ -52,39 +55,37 @@ export default function PostPage() {
       try {
         // Fetch post
         const postResponse = await fetch(`https://dummyjson.com/posts/${id}`)
-        
         if (!postResponse.ok) {
           throw new Error(`Failed to fetch post: ${postResponse.status}`)
         }
-        
         const postData = await postResponse.json()
         setPost(postData)
         
         // Fetch post author
         const userResponse = await fetch(`https://dummyjson.com/users/${postData.userId}`)
-        
         if (!userResponse.ok) {
           throw new Error(`Failed to fetch user: ${userResponse.status}`)
         }
-        
         const userData = await userResponse.json()
         setUser(userData)
         
         // Fetch comments
         const commentsResponse = await fetch(`https://dummyjson.com/posts/${id}/comments`)
-        
         if (!commentsResponse.ok) {
           throw new Error(`Failed to fetch comments: ${commentsResponse.status}`)
         }
-        
         const commentsData = await commentsResponse.json()
         setComments(commentsData.comments || [])
         
         // Fetch user data for each comment
         if (commentsData.comments && commentsData.comments.length > 0) {
-          const userIds: number[] = [];
-          // const userIds = [...new Set(commentsData.comments.map((comment: Comment) => comment.user.id))]
-          const userDataPromises = userIds.map((userId: number) => 
+          // Get unique user ids from comments
+          // const uniqueUserIds = [
+          //   ...new Set(commentsData.comments.map((comment: Comment) => comment.user.id))
+          // ]
+          const uniqueUserIds: number[] = [];
+          
+          const userDataPromises = uniqueUserIds.map((userId: number) =>
             fetch(`https://dummyjson.com/users/${userId}`).then(res => {
               if (!res.ok) {
                 throw new Error(`Failed to fetch user ${userId}: ${res.status}`)
@@ -98,7 +99,6 @@ export default function PostPage() {
           usersData.forEach((userData: User) => {
             usersMap[userData.id] = userData
           })
-          
           setCommentUsers(usersMap)
         }
       } catch (error) {
@@ -175,7 +175,9 @@ export default function PostPage() {
         <main className="container py-6">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-2xl font-bold">Post not found</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">The post you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              The post you're looking for doesn't exist or has been removed.
+            </p>
             <Button asChild className="mt-4 bg-purple-600 hover:bg-purple-700 text-white">
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
@@ -203,7 +205,8 @@ export default function PostPage() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={user?.image} alt={user?.username} />
                     <AvatarFallback>
-                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                      {user?.firstName?.charAt(0)}
+                      {user?.lastName?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                 </Link>
@@ -211,14 +214,15 @@ export default function PostPage() {
                   <Link href={`/profile/${post.userId}`} className="font-medium hover:underline">
                     {user?.firstName} {user?.lastName}
                   </Link>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">@{user?.username}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    @{user?.username}
+                  </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
               <p className="whitespace-pre-line text-gray-500 dark:text-gray-400">{post.body}</p>
-              
               <div className="flex flex-wrap gap-2 mt-6">
                 {post.tags.map((tag) => (
                   <Link href={`/dashboard?tag=${tag}`} key={tag}>
@@ -232,14 +236,12 @@ export default function PostPage() {
             <CardFooter className="border-t border-gray-200 dark:border-gray-800 p-4 flex justify-between">
               <Button variant="ghost" size="sm" className="text-gray-500 dark:text-gray-400 gap-1">
                 <Heart className="h-4 w-4" />
-                <span>{post.reactions} likes</span>
+                <span>{post.reactions.likes} likes</span>
               </Button>
-              
               <Button variant="ghost" size="sm" className="text-gray-500 dark:text-gray-400 gap-1">
                 <MessageCircle className="h-4 w-4" />
                 <span>{comments.length} comments</span>
               </Button>
-              
               <Button variant="ghost" size="sm" className="text-gray-500 dark:text-gray-400 gap-1">
                 <Share2 className="h-4 w-4" />
                 <span>Share</span>
@@ -248,7 +250,6 @@ export default function PostPage() {
           </Card>
           
           <h2 className="text-2xl font-bold mt-8 mb-4">Comments ({comments.length})</h2>
-          
           {comments.length > 0 ? (
             <div className="space-y-4">
               {comments.map((comment) => {
@@ -261,7 +262,8 @@ export default function PostPage() {
                           <Avatar>
                             <AvatarImage src={commentUser?.image} alt={commentUser?.username} />
                             <AvatarFallback>
-                              {commentUser?.firstName?.charAt(0)}{commentUser?.lastName?.charAt(0)}
+                              {commentUser?.firstName?.charAt(0)}
+                              {commentUser?.lastName?.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -271,7 +273,9 @@ export default function PostPage() {
                               {commentUser?.firstName} {commentUser?.lastName}
                             </Link>
                           </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">@{comment.user.username}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            @{comment.user.username}
+                          </p>
                           <p>{comment.body}</p>
                         </div>
                       </div>
@@ -283,7 +287,9 @@ export default function PostPage() {
           ) : (
             <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
               <CardContent className="p-6 text-center">
-                <p className="text-gray-500 dark:text-gray-400">No comments yet. Be the first to comment!</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No comments yet. Be the first to comment!
+                </p>
               </CardContent>
             </Card>
           )}
