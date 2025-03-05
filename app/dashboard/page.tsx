@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useAuth } from "@/components/auth-provider"
+// import { useAuth } from "@/components/auth-provider"
 import { PostCard } from "@/components/post-card"
 import { PostFilter } from "@/components/post-filter"
 import {

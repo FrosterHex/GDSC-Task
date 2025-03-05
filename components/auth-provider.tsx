@@ -9,6 +9,7 @@ interface AuthContextType {
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  user?:any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
